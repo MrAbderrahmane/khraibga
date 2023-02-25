@@ -195,10 +195,10 @@ class Board {
     if (lastMove) {
       move = Move.from(lastMove);
       move.board = cloneBoard;
+      move.add(to)
     } else {
       move = new Move(pos, to, cloneBoard);
     }
-    move.add(to)
     return move;
   }
 
@@ -263,7 +263,7 @@ class Board {
 
 
     if (isInStrait && !isKing) {
-      return movemovess;
+      return moves;
     }
     if (!isInStrait) {
       const negativeDiagonalMove = this.getSingleMove(lastMove, board, pos, {
@@ -304,7 +304,7 @@ class Board {
         move,
         move.board,
         move.to,
-        move.getLastMoveDirection()
+        move.lastDirection
       );
       if (tempMoves && tempMoves.length) movesInRow.push(...tempMoves);
     }
@@ -345,12 +345,10 @@ class Board {
     if (lastMove) {
       move = Move.from(lastMove);
       move.board = cloneBoard;
-      move.to = to;
+      move.add(to,jumped);
     } else {
-      move = new Move(pos, to, cloneBoard);
+      move = new Move(pos, to, cloneBoard,jumped);
     }
-    move.listVisited.push(pos);
-    move.listCaptured.push(jumped);
     return move;
   }
 
@@ -394,13 +392,12 @@ class Board {
     if (lastMove) {
       result = Move.from(lastMove);
       result.board = tempMove.board;
-      result.listVisited = [...lastMove.listVisited,lastMove.to];
+      result.listVisited = [...lastMove.listVisited];
       result.listCaptured = [...lastMove.listCaptured, ...tempMove.listCaptured];
-      result.to = tempMove.to;
+      result.add(tempMove.to);
     } else {
       result = tempMove;
       result.from = pos;
-      result.listVisited = [pos];
     }
     return result;
   }
@@ -542,6 +539,7 @@ class Board {
   getValidMoves(pos,startTime) {
     if (!this.isPiece(this.getPieceValue(pos)))
       return { maxJump: 0, validMoves: [] };
+    /* !  caching
     if (
       Board[
         pos.row.toString() + "-" + pos.col.toString() + this.board.toString()
@@ -550,6 +548,7 @@ class Board {
       return Board[
         pos.row.toString() + "-" + pos.col.toString() + this.board.toString()
       ];
+    */
     
     const possibleJumps = this.getValidJumps(pos,startTime);
     this.makeKingsByMoves(possibleJumps);
@@ -565,9 +564,11 @@ class Board {
       maxJump: 0,
       validMoves: simpleMoves
     };
+    /* ! caching
     Board[
       pos.row.toString() + "-" + pos.col.toString() + this.board.toString()
     ] = res;
+    */
     return res;
   }
 

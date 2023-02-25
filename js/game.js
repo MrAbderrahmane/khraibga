@@ -3,7 +3,7 @@ class Game{
     this.histo = [];
     this.aiPlayId = 0;
     this.cancledAiPlayId=0
-    this.aiPlayers = {[CONSTANTS.FIRSTPLAYER]:false,[CONSTANTS.SECONDPLAYER]:true};
+    this.aiPlayers = {[CONSTANTS.FIRSTPLAYER]:false,[CONSTANTS.SECONDPLAYER]:false};
 
     this._init()
   }
@@ -108,6 +108,7 @@ class Game{
       this.board.board = this.board.cloneBoard(currentMove.board);
       this.selected = null;
       this.turn = -this.turn;
+      
       this.allMovablePiecesMoves = this.aiPlayers[this.turn]? new Map() : this.getMovablePieces(CONSTANTS.FIRSTPLAYER);
       setTimeout(() => {
         this.paused = false;

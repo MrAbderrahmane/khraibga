@@ -1,7 +1,7 @@
 class Move {
-  constructor(from,to,board){
-    this.listVisited = [];
-    this.listCaptured = [];
+  constructor(from,to,board,jumped=null){
+    this.listVisited = [to];
+    this.listCaptured = jumped?[jumped]:[];
     this.from = from;
     this.to = to;
     this.board = board;
@@ -11,11 +11,11 @@ class Move {
     };
   }
 
-  static from(Move){
-    const move = new Move(move.from,move.to,move.board);
-    this.listVisited = [...from.listVisited];
-    this.listCaptured = [...from.listCaptured];
-    return move;
+  static from(move){
+    const m = new Move(move.from,move.to,move.board);
+    m.listVisited = [...move.listVisited];
+    m.listCaptured = [...move.listCaptured];
+    return m;
   }
 
   add(to,jumped){
