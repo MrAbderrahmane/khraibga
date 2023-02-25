@@ -83,8 +83,14 @@ class Board {
   }
 
   remove(pieces, board = this.board) {
+    const player = this.getPlayer(this.getPieceValue(pieces[0],board));
     for (const piece of pieces) {
       board[piece.row][piece.col] = 0;
+    }
+    const allPlayerPieces = this.getAllPieces(player,board);
+    if(allPlayerPieces.length === 1){
+      const lastPiece = allPlayerPieces[0];
+      board[lastPiece.row][lastPiece.col] = player * 1.1;
     }
   }
 
@@ -118,12 +124,12 @@ class Board {
     return this.getPlayer(pieceValue) === CONSTANTS.FIRSTPLAYER ? -1 : 1;
   }
 
-  getAllPieces(player) {
+  getAllPieces(player,board = this.board) {
     const currPleyer = this.getPlayer(player);
     const pieces = [];
-    let iRow = this.board.length;
+    let iRow = board.length;
     while (iRow--) {
-      const row = this.board[iRow];
+      const row = board[iRow];
       let iCol = row.length;
       while (iCol--) {
         const value = row[iCol];
