@@ -9,7 +9,8 @@ function minimax(move,depth,maxPlayer,alpha,beta,player) {
     board = new Board(board);
   }
   if(depth === 0 || board.winner() !== null){
-    return [board.evaluate(player),move];
+    const value = board.evaluate(player);
+    return [value,move];
   }
 
   if(maxPlayer){
@@ -25,7 +26,7 @@ function minimax(move,depth,maxPlayer,alpha,beta,player) {
       alpha = Math.max(alpha,evaluation);
       if(beta <= alpha) break;
     }
-    return [maxEval,bestMove];
+    return [maxEval,bestMove || allMoves[0]];
   }else{
     let minEval = Infinity;
     let bestMove = null;
@@ -39,7 +40,7 @@ function minimax(move,depth,maxPlayer,alpha,beta,player) {
       beta = Math.min(beta,evaluation);
       if(beta <= alpha) break;
     }
-    return [minEval,bestMove];
+    return [minEval,bestMove || allMoves[0]];
   }
 }
 

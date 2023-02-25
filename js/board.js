@@ -469,6 +469,8 @@ class Board {
 
   evaluate(player) {
     const counts = this.getPlayersPiecesCount();
+    if(counts.firstPlayerAllPiecesCount === 0) return player * -Infinity;
+    if(counts.secondPlayerAllPiecesCount === 0) return player * Infinity;
     return (
       player *
       (CONSTANTS.PIECECOAFFICIENT *

@@ -57,9 +57,20 @@ class Renderer {
     }
   }
 
+  clearCanvas(){
+    this.ctx.clearRect(
+      0,
+      0,
+      CONSTANTS.WIDTH + CONSTANTS.PADDING * 2,
+      CONSTANTS.HEIGHT + CONSTANTS.PADDING * 2
+    );
+  }
+
   draw(){
-    if(this.game.winner()){
-      this.drawWinner();
+    this.clearCanvas();
+    const winner = this.game.winner();
+    if(winner){
+      this.drawWinner(winner);
     }else{
       this.drawBoardAndPieces();
       this._highlightSelected();
@@ -85,26 +96,16 @@ class Renderer {
     });
   }
 
-  drawWinner(){
+  drawWinner(winner){
     this.ctx.save();
-    this.ctx.fillStyle = CONSTANTS.HIGHLIGHTCOLOR;
-    this.ctx.fillRect(0,0,this.canvas.width,this.canvas.height);
-    this.ctx.fillStyle = CONSTANTS.COLORS[this.game.winner()];
-    this.ctx.fill();
-    this.ctx.fillRect(this.canvas.width/4,this.canvas.height/2,20,20)
+    this.ctx.fillStyle = CONSTANTS.COLORS[winner];
+    this.ctx.fillRect(this.canvas.width/4,this.canvas.height/2+5,20,20)
     this.ctx.fillStyle = 'black';
     this.ctx.fillText('WON',this.canvas.width/4 + 40,this.canvas.height/2 + 20)
-    this.ctx.fill();
     this.ctx.restore();
   }
 
   _drawBoard() {
-    this.ctx.clearRect(
-      0,
-      0,
-      CONSTANTS.WIDTH + CONSTANTS.PADDING * 2,
-      CONSTANTS.HEIGHT + CONSTANTS.PADDING * 2
-    );
     this.ctx.save();
     // draw horizantal lines
     for (let i = 0; i < CONSTANTS.ITER + 1; i++) {
