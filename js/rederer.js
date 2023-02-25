@@ -8,7 +8,21 @@ class Renderer {
     this.ctx.lineWidth = 2;
     this.canvas.addEventListener("click", this.clickHandler.bind(this), false);
 
+    this.waitingForAiMove = false;
     this.game = new Game();
+    this.worker = new Worker('js/minimax.js');
+    this.worker.onmessage = e =>{
+      const aiMove = e.data.move
+      // if(game.cancledAiPlayId === e.data.id){
+      //   game.cancledAiPlayId = 0;
+      //   return;
+      // }
+      // if(!game.paused){
+      this.game.makeAIMove(aiMove);
+      this.waitingForAiMove = false;
+      // }
+      // this.game aiIsPlaying = false;
+    }
   }
 
   clickHandler(e){
@@ -51,7 +65,15 @@ class Renderer {
       this._highlightSelected();
       this._highlightMovablePieces();
       this._drawValidMoves();
+      if(this.game.aiShouldPlay && !this.waitingForAiMove){
+        this.getAiPlaying()
+      }
     }
+  }
+
+  getAiPlaying(){
+    this.worker.postMessage({ id:++this.game.aiPlayId, player:this.game.turn, board:this.game.board.board});
+    this.waitingForAiMove = true;
   }
 
   drawBoardAndPieces() {

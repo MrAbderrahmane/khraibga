@@ -3,8 +3,8 @@ class Game{
     this.histo = [];
     this.aiPlayId = 0;
     this.cancledAiPlayId=0
-    this.aiPlayers = {[CONSTANTS.FIRSTPLAYER]:false,[CONSTANTS.SECONDPLAYER]:false};
-
+    this.aiPlayers = {[CONSTANTS.FIRSTPLAYER]:false,[CONSTANTS.SECONDPLAYER]:true};
+    this.aiShouldPlay = false;
     this._init()
   }
 
@@ -75,8 +75,9 @@ class Game{
     }
     if(this.aiPlayers[this.turn]){
       this.allMovablePiecesMoves = new Map();
-      
+      this.aiShouldPlay = true;
     }else{
+      this.aiShouldPlay = false;
       this.allMovablePiecesMoves = this.getMovablePieces(this.turn);
     }
     this.selected = null;
@@ -108,7 +109,6 @@ class Game{
       this.board.board = this.board.cloneBoard(currentMove.board);
       this.selected = null;
       this.turn = -this.turn;
-      
       this.allMovablePiecesMoves = this.aiPlayers[this.turn]? new Map() : this.getMovablePieces(CONSTANTS.FIRSTPLAYER);
       setTimeout(() => {
         this.paused = false;
