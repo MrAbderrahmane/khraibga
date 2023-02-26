@@ -1,11 +1,13 @@
 class Renderer {
-  constructor(){
+  constructor(root){
     this.canvas = document.createElement("canvas");
     this.canvas.width = CONSTANTS.WIDTH + CONSTANTS.PADDING * 2;
     this.canvas.height = CONSTANTS.HEIGHT + CONSTANTS.PADDING * 2;
-    document.body.appendChild(this.canvas);
+    root.appendChild(this.canvas);
     this.ctx = this.canvas.getContext("2d");
     this.ctx.lineWidth = 2;
+    this.lastTimeStamp = 0;
+    this.requestAnimationFrameRef = null;
     this.canvas.addEventListener("click", this.clickHandler.bind(this), false);
 
     this.waitingForAiMove = false;
@@ -22,6 +24,35 @@ class Renderer {
       this.waitingForAiMove = false;
       // }
       // this.game aiIsPlaying = false;
+    }
+  }
+
+  run(){
+    this.animate(0);
+  }
+
+  stop(){
+    cancelAnimationFrame(this.requestAnimationFrameRef);
+  }
+  // let lastTimeStamp = 0;
+  animate(time) {
+    if(time - this.lastTimeStamp > 60){
+      renderer.draw();
+      // if(renderer.paused && pauseBtn.textContent !== 'continue'){
+      //   pauseBtn.textContent = 'continue';
+      // }else if(!renderer.paused && pauseBtn.textContent !== 'pause'){
+      //   pauseBtn.textContent = 'pause';
+      // }
+      this.lastTimeStamp =  time;
+      this.requestAnimationFrameRef = requestAnimationFrame(this.animate.bind(this))
+      // if(renderer.aiPlayers[renderer.turn] && !aiIsPlaying && !renderer.paused){
+      //   aiIsPlaying = true;
+      //   setTimeout(() => {
+      //     aiPlay(renderer.turn,renderer.board.board);
+      //   }, 100);
+      // }
+    }else{
+      this.requestAnimationFrameRef = requestAnimationFrame(this.animate.bind(this))
     }
   }
 
@@ -98,6 +129,8 @@ class Renderer {
 
   drawWinner(winner){
     this.ctx.save();
+    this.ctx.fillStyle = CONSTANTS.HIGHLIGHTCOLOR;
+    this.ctx.fillRect(0,0,this.canvas.width,this.canvas.height);
     this.ctx.fillStyle = CONSTANTS.COLORS[winner];
     this.ctx.fillRect(this.canvas.width/4,this.canvas.height/2+5,20,20)
     this.ctx.fillStyle = 'black';
