@@ -1,5 +1,13 @@
 class Renderer {
   constructor(root){
+    // undo btn
+    this.undoBtn = document.createElement('button');
+    this.undoBtn.textContent = 'Undo'
+    this.undoBtn.addEventListener('click',e =>{
+      this.undo();
+    },false)
+    root.appendChild(this.undoBtn)
+    // canvas
     this.canvas = document.createElement("canvas");
     this.canvas.width = CONSTANTS.WIDTH + CONSTANTS.PADDING * 2;
     this.canvas.height = CONSTANTS.HEIGHT + CONSTANTS.PADDING * 2;
@@ -14,17 +22,21 @@ class Renderer {
     this.game = new Game();
     this.worker = new Worker('js/minimax.js');
     this.worker.onmessage = e =>{
-      const aiMove = e.data.move
       // if(game.cancledAiPlayId === e.data.id){
       //   game.cancledAiPlayId = 0;
       //   return;
       // }
       // if(!game.paused){
-      this.game.makeAIMove(aiMove);
+      this.game.makeAIMove(e.data);
       this.waitingForAiMove = false;
       // }
       // this.game aiIsPlaying = false;
     }
+  }
+
+  undo(){
+    this.waitingForAiMove = false;
+    this.game.undo();
   }
 
   run(){

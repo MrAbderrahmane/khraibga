@@ -2,7 +2,6 @@ class Game{
   constructor(){
     this.histo = [];
     this.aiPlayId = 0;
-    this.cancledAiPlayId=0
     this.aiPlayers = {[CONSTANTS.FIRSTPLAYER]:false,[CONSTANTS.SECONDPLAYER]:true};
     this.aiShouldPlay = false;
     this._init()
@@ -11,11 +10,8 @@ class Game{
   _init(){
     this.selected = null;
     this.board = new Board()
-    this.turn = CONSTANTS.SECONDPLAYER;
-    this.paused = false;
-    
-    this.saveHisto({board:this.board.board});
-    this.changeTurn();
+    this.turn = CONSTANTS.FIRSTPLAYER;
+    this.allMovablePiecesMoves = this.getMovablePieces(this.turn);
   }
 
   reset(){
@@ -83,7 +79,9 @@ class Game{
     this.selected = null;
   }
 
-  makeAIMove(move){
+  makeAIMove(data){
+    const {id,player,move} = data;
+    if(id !== this.aiPlayId || player !== this.turn) return;
     this.board.board = move.board;
     this.saveHisto(move);
     this.changeTurn();
@@ -99,20 +97,20 @@ class Game{
     move.listVisited && (tempMove.listVisited = [...move.listVisited])
     this.histo.push(tempMove);
   }
+
   undo(){
-    // this.paused = true;
-    if(this.histo.length>1){
-      this.cancledAiPlayId = this.aiPlayId;
-      this.paused = true;
-      this.histo.pop();
-      const currentMove = this.histo[this.histo.length - 1];
-      this.board.board = this.board.cloneBoard(currentMove.board);
-      this.selected = null;
-      this.turn = -this.turn;
-      this.allMovablePiecesMoves = this.aiPlayers[this.turn]? new Map() : this.getMovablePieces(CONSTANTS.FIRSTPLAYER);
+    const lastMove = this.histo.pop();
+    if(!lastMove) return;
+    this.aiShouldPlay = false;
+    ++this.aiPlayId;
+    this.board.board = this.board.cloneBoard(this.histo[this.histo.length - 1]?.board || new Board().board);
+    this.selected = null;
+    this.turn = -this.turn;
+    this.allMovablePiecesMoves = this.aiPlayers[this.turn]? new Map() : this.getMovablePieces(this.turn);
+    if(this.aiPlayers[this.turn]){
       setTimeout(() => {
-        this.paused = false;
+        if(this.aiPlayers[this.turn]) this.aiShouldPlay = true;
       }, 1000);
-    }    
+    }
   }
 }
