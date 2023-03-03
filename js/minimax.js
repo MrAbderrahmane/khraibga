@@ -14,7 +14,7 @@ function minimax(move,depth,maxPlayer,alpha,beta,player) {
   }
 
   if(maxPlayer){
-    let maxEval = -Infinity;
+    let maxEval = -CONSTANTS.INFINITY;
     let bestMove = null;
     const allMoves = getAllMoves(board, player);
     for (const tempMove of allMoves) {
@@ -28,7 +28,7 @@ function minimax(move,depth,maxPlayer,alpha,beta,player) {
     }
     return [maxEval,bestMove || allMoves[0]];
   }else{
-    let minEval = Infinity;
+    let minEval = CONSTANTS.INFINITY;
     let bestMove = null;
     const allMoves = getAllMoves(board, -player);
     for (const tempMove of allMoves) {
@@ -56,7 +56,7 @@ function getAllMoves(board,player,startTime) {
 
 addEventListener('message',e=>{
   if( e.data.player && e.data.board ){
-    const [eval,move] = minimax({board:e.data.board},2*3,true,-Infinity,+Infinity,e.data.player)
+    const [eval,move] = minimax({board:e.data.board},2*3,true,-CONSTANTS.INFINITY,+CONSTANTS.INFINITY,e.data.player)
     postMessage({id:e.data.id, move,player:e.data.player});
   }
 },false);

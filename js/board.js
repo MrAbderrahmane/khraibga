@@ -469,8 +469,8 @@ class Board {
 
   evaluate(player) {
     const counts = this.getPlayersPiecesCount();
-    if(counts.firstPlayerAllPiecesCount === 0) return player * -Infinity;
-    if(counts.secondPlayerAllPiecesCount === 0) return player * Infinity;
+    if(counts.firstPlayerAllPiecesCount === 0) return player * -CONSTANTS.INFINITY;
+    if(counts.secondPlayerAllPiecesCount === 0) return player * CONSTANTS.INFINITY;
     return (
       player *
       (CONSTANTS.PIECECOAFFICIENT *
@@ -482,10 +482,16 @@ class Board {
   }
 
   addMoveToBestMoves(bestMoves, move) {
-    if (bestMoves.length && bestMoves[0].listCaptured.length < move.listCaptured.length) {
-      bestMoves.length = 0;
+    if(bestMoves.length){
+      if (bestMoves[0].listCaptured.length < move.listCaptured.length) {
+        bestMoves.length = 0;
+        bestMoves.push(move);
+      }else if (bestMoves[0].listCaptured.length === move.listCaptured.length) {
+        bestMoves.push(move);
+      }
+    } else {
+      bestMoves.push(move);
     }
-    bestMoves.push(move);
   }
 
   getValidJumps(pos,startTime, validJumps = [], lastMove = null) {

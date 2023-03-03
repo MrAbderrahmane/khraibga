@@ -21,7 +21,7 @@ const CONSTANTS = {
     [this.FIRSTPLAYER]:this.FIRSTPLAYERCOLOR,
     [this.SECONDPLAYER]:this.SECONDPLAYERCOLOR
   },
-
+  INFINITY: 100000,
   ALLNEIBOURS: [
     {row:-1,col:0}, // 0 up
     {row:-1,col:1}, // 1 up right
@@ -35,7 +35,7 @@ const CONSTANTS = {
 
 
   PIECECOAFFICIENT: 1,
-  KINGBONUSCOAFFICIENT: 10,
+  KINGBONUSCOAFFICIENT: 2,
 
   AITIMELIMIT: 60 * 1000,
 }
