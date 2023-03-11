@@ -57,10 +57,16 @@ class Board {
 
   shouldBeCrowned(to, board = this.board) {
     return (
-      (to.row === CONSTANTS.ROWS &&
-        board[to.row][to.col] === CONSTANTS.SECONDPLAYER) ||
-      (to.row === 0 && board[to.row][to.col] === CONSTANTS.FIRSTPLAYER)
-    );
+      (
+        board[to.row][to.col] === CONSTANTS.SECONDPLAYER && 
+        (this.isEqualPosition(to,{row:4,col:0}) || this.isEqualPosition(to,{row:4,col:4}))
+      )
+      ||
+      (
+        board[to.row][to.col] === CONSTANTS.FIRSTPLAYER && 
+        (this.isEqualPosition(to,{row:0,col:0}) || this.isEqualPosition(to,{row:0,col:4}))
+      )
+    )
   }
   isKing(pieceValue) {
     return Math.abs(pieceValue) === 1.1;
@@ -149,11 +155,11 @@ class Board {
         this.getPlayer(this.getPieceValue(move.to, move.board)) ===
         CONSTANTS.FIRSTPLAYER
       ) {
-        if (move.to.row === 0) {
+        if (this.isEqualPosition(move.to,{row: 0,col:0}) || this.isEqualPosition(move.to,{row: 0,col:4})) {
           this.makeKing(move.to, move.board);
         }
       } else {
-        if (move.to.row === 4) {
+        if (this.isEqualPosition(move.to, {row : 4,col:0}) || this.isEqualPosition(move.to, {row : 4,col:4})) {
           this.makeKing(move.to, move.board);
         }
       }
