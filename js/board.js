@@ -347,8 +347,9 @@ class Board {
 
     const jumped = {
       row: pos.row + direction.row,
-      col: pos.col + direction.col,
+      col: pos.col + direction.col
     };
+    jumped.value = this.getPieceValue(jumped, board)
     const cloneBoard = this.cloneBoard(board);
     this.swap(pos, to, cloneBoard);
     this.remove([jumped], cloneBoard);

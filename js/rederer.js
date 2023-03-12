@@ -32,6 +32,8 @@ class Renderer {
       // }
       // this.game aiIsPlaying = false;
     }
+    this.moveIndexAnimated = 0;
+    this.currentFrame = 0;
   }
 
   undo(){
@@ -49,7 +51,7 @@ class Renderer {
   // let lastTimeStamp = 0;
   animate(time) {
     if(time - this.lastTimeStamp > 60){
-      renderer.draw();
+      this.draw();
       // if(renderer.paused && pauseBtn.textContent !== 'continue'){
       //   pauseBtn.textContent = 'continue';
       // }else if(!renderer.paused && pauseBtn.textContent !== 'pause'){
@@ -114,7 +116,9 @@ class Renderer {
     const winner = this.game.winner();
     if(winner){
       this.drawWinner(winner);
-    }else{
+    }else if(this.moveIndexAnimated === this.game.histo.length-1){
+      this.drawFrame();
+    } else {
       this.drawBoardAndPieces();
       this._highlightSelected();
       this._highlightMovablePieces();
@@ -125,16 +129,117 @@ class Renderer {
     }
   }
 
+  drawFrame(){
+    const move = this.game.histo[this.game.histo.length - 1];
+    const step = Math.floor(this.currentFrame / CONSTANTS.FRAMESPERMOVE);
+
+    if(step >= move.listVisited.length){ // animation ended
+      this.currentFrame = 0;
+      this.moveIndexAnimated++;
+      this.drawBoardAndPieces();
+      return;
+    }
+    const board = this.game.board.cloneBoard();
+    const value = board[move.to.row][move.to.col];
+    board[move.to.row][move.to.col] = 0;
+    let len = move.listCaptured.length;
+    while (--len>step) {
+      const jumped = move.listCaptured[len];
+      board[jumped.row][jumped.col] = jumped.value;
+    }
+    this.drawBoardAndPieces(board);
+
+    const from = step? move.listVisited[step-1] : move.from;
+    const to = move.listVisited[step];
+    const progress = this.currentFrame % CONSTANTS.FRAMESPERMOVE / CONSTANTS.FRAMESPERMOVE;
+    if(move.listCaptured.length){
+      this.drawCollectedPiece(move.listCaptured[step],progress);
+    }
+    this.drawAnimatedPiece(from,to,value,progress);
+    this.currentFrame++;
+  }
+
+  drawCollectedPiece(pos,progress){
+    this.ctx.save();
+
+    this.ctx.fillStyle = CONSTANTS.COLORS[this.game.board.getPlayer(pos.value)];
+    this.ctx.beginPath();
+    this.ctx.arc(
+      CONSTANTS.PADDING + pos.col * CONSTANTS.SQUARE_SIZE,
+      CONSTANTS.PADDING + pos.row * CONSTANTS.SQUARE_SIZE,
+      CONSTANTS.RADIUS * (1-progress),
+      0,
+      2 * Math.PI,
+      undefined
+    );
+    this.ctx.closePath();
+    this.ctx.fill();
+    this.ctx.stroke();
+
+    if (Math.abs(pos.value) === 1.1) {
+      this.ctx.beginPath();
+      this.ctx.arc(
+        CONSTANTS.PADDING + pos.col * CONSTANTS.SQUARE_SIZE,
+        CONSTANTS.PADDING + pos.row * CONSTANTS.SQUARE_SIZE,
+        (CONSTANTS.RADIUS - 5)  * (1-progress),
+        0,
+        2 * Math.PI,
+        undefined
+      );
+      this.ctx.closePath();
+      this.ctx.fill();
+      this.ctx.stroke();
+    }
+
+    this.ctx.restore();
+  }
+
+  drawAnimatedPiece(from,to,value,progress) {
+
+    this.ctx.save();
+
+    this.ctx.fillStyle = CONSTANTS.COLORS[this.game.board.getPlayer(value)];
+    this.ctx.beginPath();
+    this.ctx.arc(
+      CONSTANTS.PADDING + (from.col + (to.col - from.col) *progress) * CONSTANTS.SQUARE_SIZE,
+      CONSTANTS.PADDING + (from.row + (to.row - from.row) * progress) * CONSTANTS.SQUARE_SIZE,
+      CONSTANTS.RADIUS,
+      0,
+      2 * Math.PI,
+      undefined
+    );
+    this.ctx.closePath();
+    this.ctx.fill();
+    this.ctx.stroke();
+
+    if (Math.abs(value) === 1.1) {
+      this.ctx.beginPath();
+      this.ctx.arc(
+        CONSTANTS.PADDING + (from.col + (to.col - from.col)*progress) * CONSTANTS.SQUARE_SIZE,
+        CONSTANTS.PADDING + (from.row + (to.row - from.row)*progress) * CONSTANTS.SQUARE_SIZE,
+        CONSTANTS.RADIUS - 5,
+        0,
+        2 * Math.PI,
+        undefined
+      );
+      this.ctx.closePath();
+      this.ctx.fill();
+      this.ctx.stroke();
+    }
+
+    this.ctx.restore();
+  }
+
   getAiPlaying(){
     this.worker.postMessage({ id:++this.game.aiPlayId, player:this.game.turn, board:this.game.board.board});
     this.waitingForAiMove = true;
   }
 
-  drawBoardAndPieces() {
+  drawBoardAndPieces(board = this.game.board.board) {
     this._drawBoard(this.ctx);
-    this.game.board.board.forEach((rowList, row) => {
+    board.forEach((rowList, row) => {
       rowList.forEach((pieceValue, col) => {
-        this.game.board.isPiece(pieceValue) && this.drawPiece({ row, col });
+        this.game.board.isPiece(pieceValue) && this.drawPiece({ row, col,value:pieceValue });
       });
     });
   }
@@ -237,7 +342,7 @@ class Renderer {
   }
 
   drawPiece(pos) {
-    const pieceValue = this.game.board.getPieceValue(pos);
+    const pieceValue = pos.value || this.game.board.getPieceValue(pos);
     if (!this.game.board.isPiece(pieceValue)) return;
     this.ctx.save();
 
