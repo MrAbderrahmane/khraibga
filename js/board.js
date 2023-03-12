@@ -235,8 +235,11 @@ class Board {
     while (i--) {
       const m = moves[i];
       if (lastMove) {
-        m.from = lastMove.from;
-        m.listVisited = lastMove.listVisited.slice();
+        // m.from = lastMove.from;
+        const lVisited = m.listVisited.slice();
+        const last = lVisited.pop();
+        lVisited.pop();
+        m.listVisited = [...lVisited,last];
       } else {
         m.from = pos;
         m.listVisited = [pos];
