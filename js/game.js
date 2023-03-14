@@ -95,6 +95,15 @@ class Game{
     const tempMove = new Move({...move.from},{...move.to},this.board.cloneBoard(move.board));
     move.listCaptured && (tempMove.listCaptured = [...move.listCaptured])
     move.listVisited && (tempMove.listVisited = [...move.listVisited])
+    const boardBefore = this.histo[this.histo.length - 1]?.board || new Board().board;
+    this.lastMove = {
+      ...tempMove,
+      undo:false,
+      boardBefore: this.board.cloneBoard(boardBefore),
+      startValue:this.board.getPieceValue(move.from,boardBefore),
+      endValue:this.board.getPieceValue(move.to),
+      shouldBeAnimated: true
+    };
     this.histo.push(tempMove);
   }
 
@@ -103,8 +112,17 @@ class Game{
     if(!lastMove) return;
     this.aiShouldPlay = false;
     ++this.aiPlayId;
-    this.board.board = this.board.cloneBoard(this.histo[this.histo.length - 1]?.board || new Board().board);
     this.selected = null;
+    const boardBefore = this.histo[this.histo.length - 1]?.board || new Board().board;
+    this.lastMove = {
+      ...lastMove,
+      undo:true,
+      boardBefore: this.board.cloneBoard(boardBefore),
+      startValue:this.board.getPieceValue(lastMove.from,boardBefore),
+      endValue:this.board.getPieceValue(lastMove.to,lastMove.board),
+      shouldBeAnimated: true
+    };
+    this.board.board = this.board.cloneBoard(this.histo[this.histo.length - 1]?.board || new Board().board);
     this.turn = -this.turn;
     this.allMovablePiecesMoves = this.aiPlayers[this.turn]? new Map() : this.getMovablePieces(this.turn);
     if(this.aiPlayers[this.turn]){

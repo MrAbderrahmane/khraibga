@@ -32,11 +32,11 @@ class Renderer {
       // }
       // this.game aiIsPlaying = false;
     }
-    this.moveIndexAnimated = 0;
     this.currentFrame = 0;
   }
 
   undo(){
+    this.currentFrame = 0
     this.waitingForAiMove = false;
     this.game.undo();
   }
@@ -116,7 +116,7 @@ class Renderer {
     const winner = this.game.winner();
     if(winner){
       this.drawWinner(winner);
-    }else if(this.moveIndexAnimated === this.game.histo.length-1){
+    }else if(this.game.lastMove?.shouldBeAnimated){
       this.drawFrame();
     } else {
       this.drawBoardAndPieces();
@@ -130,36 +130,55 @@ class Renderer {
   }
 
   drawFrame(){
-    const move = this.game.histo[this.game.histo.length - 1];
+    const move = this.game.lastMove;
     const step = Math.floor(this.currentFrame / CONSTANTS.FRAMESPERMOVE);
 
     if(step >= move.listVisited.length){ // animation ended
       this.currentFrame = 0;
-      this.moveIndexAnimated++;
       this.drawBoardAndPieces();
+      this.game.lastMove.shouldBeAnimated = false;
       return;
     }
-    const board = this.game.board.cloneBoard();
-    const value = board[move.to.row][move.to.col];
-    board[move.to.row][move.to.col] = 0;
-    let len = move.listCaptured.length;
-    while (--len>step) {
-      const jumped = move.listCaptured[len];
-      board[jumped.row][jumped.col] = jumped.value;
-    }
-    this.drawBoardAndPieces(board);
+    if(move.undo){
+      const board = move.board;
+      const value = move.startValue;
+      board[move.to.row][move.to.col] = 0;
 
-    const from = step? move.listVisited[step-1] : move.from;
-    const to = move.listVisited[step];
-    const progress = this.currentFrame % CONSTANTS.FRAMESPERMOVE / CONSTANTS.FRAMESPERMOVE;
-    if(move.listCaptured.length){
-      this.drawCollectedPiece(move.listCaptured[step],progress);
+      const from = step? move.listVisited[move.listVisited.length - 1 - step] : move.to;
+      const to = move.listVisited[move.listVisited.length - 2 - step] || move.from;
+      const progress = this.currentFrame % CONSTANTS.FRAMESPERMOVE / CONSTANTS.FRAMESPERMOVE;
+      if(move.listCaptured.length){
+        const collectedPiece = move.listCaptured[move.listCaptured.length - 1 - step];
+        const toBeAdded = move.listCaptured[move.listCaptured.length - step];
+        toBeAdded && (board[toBeAdded.row][toBeAdded.col] = toBeAdded.value)
+        this.drawBoardAndPieces(board);
+        this.drawCollectedPiece(collectedPiece,progress,true);
+      }else{
+        this.drawBoardAndPieces(board);
+      }
+      this.drawAnimatedPiece(from,to,value,progress);
+    }else{
+      const board = move.boardBefore;
+      const value = move.startValue;
+      board[move.from.row][move.from.col] = 0;
+  
+      const from = step? move.listVisited[step-1] : move.from;
+      const to = move.listVisited[step];
+      const progress = this.currentFrame % CONSTANTS.FRAMESPERMOVE / CONSTANTS.FRAMESPERMOVE;
+      if(move.listCaptured.length){
+        const collectedPiece = move.listCaptured[step];
+        board[collectedPiece.row][collectedPiece.col] = 0;
+        this.drawBoardAndPieces(board);
+        this.drawCollectedPiece(collectedPiece,progress);
+      }else{
+        this.drawBoardAndPieces(board);
+      }
+      this.drawAnimatedPiece(from,to,value,progress);
     }
-    this.drawAnimatedPiece(from,to,value,progress);
     this.currentFrame++;
   }
 
-  drawCollectedPiece(pos,progress){
+  drawCollectedPiece(pos,progress,grow=false){
     this.ctx.save();
 
     this.ctx.fillStyle = CONSTANTS.COLORS[this.game.board.getPlayer(pos.value)];
@@ -167,7 +186,7 @@ class Renderer {
     this.ctx.arc(
       CONSTANTS.PADDING + pos.col * CONSTANTS.SQUARE_SIZE,
       CONSTANTS.PADDING + pos.row * CONSTANTS.SQUARE_SIZE,
-      CONSTANTS.RADIUS * (1-progress),
+      CONSTANTS.RADIUS * (grow?progress:(1-progress)),
       0,
       2 * Math.PI,
       undefined
@@ -181,7 +200,7 @@ class Renderer {
       this.ctx.arc(
         CONSTANTS.PADDING + pos.col * CONSTANTS.SQUARE_SIZE,
         CONSTANTS.PADDING + pos.row * CONSTANTS.SQUARE_SIZE,
-        (CONSTANTS.RADIUS - 5)  * (1-progress),
+        (CONSTANTS.RADIUS - 5)  * (grow?progress:(1-progress)),
         0,
         2 * Math.PI,
         undefined
