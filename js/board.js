@@ -470,6 +470,10 @@ class Board {
 
   winner() {
     const counts = this.getPlayersPiecesCount();
+    return this.getWinnerFromCounts(counts);
+  }
+
+  getWinnerFromCounts(counts){
     if (counts.firstPlayerAllPiecesCount <= 0) return CONSTANTS.SECONDPLAYER;
     else if (counts.secondPlayerAllPiecesCount <= 0)
       return CONSTANTS.FIRSTPLAYER;

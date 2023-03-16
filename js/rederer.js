@@ -14,6 +14,7 @@ class Renderer {
     root.appendChild(this.canvas);
     this.ctx = this.canvas.getContext("2d");
     this.ctx.lineWidth = 2;
+    this.ctx.font = '18px sans-serif'
     this.lastTimeStamp = 0;
     this.requestAnimationFrameRef = null;
     this.canvas.addEventListener("click", this.clickHandler.bind(this), false);
@@ -113,12 +114,15 @@ class Renderer {
 
   draw(){
     this.clearCanvas();
-    const winner = this.game.winner();
+    const counts = this.game.board.getPlayersPiecesCount();
+    const winner = this.game.board.getWinnerFromCounts(counts);
     if(winner){
       this.drawWinner(winner);
     }else if(this.game.lastMove?.shouldBeAnimated){
+      this.drawCapturedPieces(counts);
       this.drawFrame();
     } else {
+      this.drawCapturedPieces(counts);
       this.drawBoardAndPieces();
       this._highlightSelected();
       this._highlightMovablePieces();
@@ -127,6 +131,26 @@ class Renderer {
         this.getAiPlaying()
       }
     }
+  }
+
+  drawCapturedPieces(counts){
+    const capturedFromFirstPlayer = 12 - counts.firstPlayerAllPiecesCount;
+    const capturedFromSecondPlayer = 12 - counts.secondPlayerAllPiecesCount;
+    this.drawPiece({ row:-0.35, col:1.5,value:1 });
+    this.drawPiece({ row:4.35, col:1.5,value:-1 });
+
+    this.ctx.save();
+    this.ctx.fillText(
+      capturedFromFirstPlayer,
+      CONSTANTS.WIDTH / 2 + 20,
+      21
+    );
+    this.ctx.fillText(
+      capturedFromSecondPlayer,
+      CONSTANTS.WIDTH / 2 + 20,
+      CONSTANTS.WIDTH + CONSTANTS.PADDING * 2 - 8
+    )
+    this.ctx.restore();
   }
 
   drawFrame(){
