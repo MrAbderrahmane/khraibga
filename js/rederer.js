@@ -6,7 +6,31 @@ class Renderer {
     this.undoBtn.addEventListener('click',e =>{
       this.undo();
     },false)
-    root.appendChild(this.undoBtn)
+    root.appendChild(this.undoBtn);
+    this.diag = document.createElement('dialog');
+    this.diag.innerHTML = `<form method="dialog">
+    <button value='true'>Human vs AI</button>
+    <button value=''>Human vs Human</button>
+  </form>`;
+    this.diag.addEventListener('close', () => {
+      this.setAIUser(!!this.diag.returnValue)
+      this.newGame();
+    })
+    root.appendChild(this.diag);
+    // new game btn
+    this.newGameBtn = document.createElement('button');
+    this.newGameBtn.textContent = 'New'
+    this.newGameBtn.addEventListener('click',e =>{
+      this.newGame();
+    },false)
+    root.appendChild(this.newGameBtn)
+    // new setting button
+    this.settingBtn = document.createElement('button');
+    this.settingBtn.textContent = 'Setting';
+    this.settingBtn.addEventListener('click',e =>{
+      this.diag.show();
+    },false)
+    root.appendChild(this.settingBtn)
     // canvas
     this.canvas = document.createElement("canvas");
     this.canvas.width = CONSTANTS.WIDTH + CONSTANTS.PADDING * 2;
@@ -34,6 +58,14 @@ class Renderer {
       // this.game aiIsPlaying = false;
     }
     this.currentFrame = 0;
+  }
+
+  setAIUser(withAi = false){
+    this.game.aiPlayers[CONSTANTS.SECONDPLAYER] = withAi;
+  }
+
+  newGame(){
+    this.game = new Game();
   }
 
   undo(){
