@@ -1,36 +1,43 @@
 class Renderer {
   constructor(root){
+    const controls = document.createElement('div');
     // undo btn
-    this.undoBtn = document.createElement('button');
-    this.undoBtn.textContent = 'Undo'
-    this.undoBtn.addEventListener('click',e =>{
+    const undoBtn = document.createElement('button');
+    undoBtn.textContent = 'Undo'
+    undoBtn.addEventListener('click',e =>{
       this.undo();
     },false)
-    root.appendChild(this.undoBtn);
-    this.diag = document.createElement('dialog');
-    this.diag.innerHTML = `<form method="dialog">
-    <button value='true'>Human vs AI</button>
+    controls.appendChild(undoBtn);
+    // settings dialog
+    const diag = document.createElement('dialog');
+    diag.innerHTML = `<form method="dialog">
+    <div>
+      <button value='true'>Human vs AI</button>
+      <input type="range" name="level" min="1" max="3">
+    </div>
     <button value=''>Human vs Human</button>
   </form>`;
-    this.diag.addEventListener('close', () => {
-      this.setAIUser(!!this.diag.returnValue)
+    diag.addEventListener('close', () => {
+      this.level = +diag.querySelector('input').value
+      this.setAIUser(!!diag.returnValue)
       this.newGame();
     })
-    root.appendChild(this.diag);
+    root.appendChild(diag);
     // new game btn
-    this.newGameBtn = document.createElement('button');
-    this.newGameBtn.textContent = 'New'
-    this.newGameBtn.addEventListener('click',e =>{
+    const newGameBtn = document.createElement('button');
+    newGameBtn.textContent = 'New'
+    newGameBtn.addEventListener('click',e =>{
       this.newGame();
     },false)
-    root.appendChild(this.newGameBtn)
+    controls.appendChild(newGameBtn)
     // new setting button
-    this.settingBtn = document.createElement('button');
-    this.settingBtn.textContent = 'Setting';
-    this.settingBtn.addEventListener('click',e =>{
-      this.diag.show();
+    const settingBtn = document.createElement('button');
+    settingBtn.textContent = 'Setting';
+    settingBtn.addEventListener('click',e =>{
+      diag.show();
     },false)
-    root.appendChild(this.settingBtn)
+    controls.appendChild(settingBtn);
+    root.appendChild(controls);
     // canvas
     this.canvas = document.createElement("canvas");
     this.canvas.width = CONSTANTS.WIDTH + CONSTANTS.PADDING * 2;
@@ -58,6 +65,23 @@ class Renderer {
       // this.game aiIsPlaying = false;
     }
     this.currentFrame = 0;
+
+    new ResizeObserver(entries => {
+      entries.forEach(entry => {
+        if(entry.target === root){
+          const dim = Math.min(entry.contentRect.width,entry.contentRect.height,window.innerWidth,window.innerHeight);
+          CONSTANTS.PADDING = dim / 10;
+          CONSTANTS.WIDTH = CONSTANTS.HEIGHT = dim - 2 * CONSTANTS.PADDING;
+          this.canvas.width = dim;
+          this.canvas.height = dim;
+          CONSTANTS.CELLWIDTH = CONSTANTS.WIDTH / 2;
+          CONSTANTS.SQUARE_SIZE = CONSTANTS.WIDTH / 4;
+          CONSTANTS.RADIUS = CONSTANTS.SQUARE_SIZE / 6;
+          this.ctx.lineWidth = CONSTANTS.RADIUS * .09;
+          CONSTANTS.VALIDMOVERADIUS = CONSTANTS.RADIUS / 2; 
+        }
+      });
+    }).observe(root);
   }
 
   setAIUser(withAi = false){
@@ -151,10 +175,10 @@ class Renderer {
     if(winner){
       this.drawWinner(winner);
     }else if(this.game.lastMove?.shouldBeAnimated){
-      this.drawCapturedPieces(counts);
+      // this.drawCapturedPieces(counts);
       this.drawFrame();
     } else {
-      this.drawCapturedPieces(counts);
+      // this.drawCapturedPieces(counts);
       this.drawBoardAndPieces();
       this._highlightSelected();
       this._highlightMovablePieces();
@@ -306,7 +330,7 @@ class Renderer {
   }
 
   getAiPlaying(){
-    this.worker.postMessage({ id:++this.game.aiPlayId, player:this.game.turn, board:this.game.board.board});
+    this.worker.postMessage({ id:++this.game.aiPlayId, player:this.game.turn, board:this.game.board.board,level:this.level || 1});
     this.waitingForAiMove = true;
   }
 
@@ -323,10 +347,14 @@ class Renderer {
     this.ctx.save();
     this.ctx.fillStyle = CONSTANTS.HIGHLIGHTCOLOR;
     this.ctx.fillRect(0,0,this.canvas.width,this.canvas.height);
-    this.ctx.fillStyle = CONSTANTS.COLORS[winner];
-    this.ctx.fillRect(this.canvas.width/4,this.canvas.height/2+5,20,20)
+    this.drawPiece({row:2,col:1},CONSTANTS.COLORS[winner],2,true);
     this.ctx.fillStyle = 'black';
-    this.ctx.fillText('WON',this.canvas.width/4 + 40,this.canvas.height/2 + 20)
+    this.ctx.font = `${CONSTANTS.SQUARE_SIZE}px sans-serif`
+    this.ctx.fillText(
+      'WON',
+      CONSTANTS.PADDING + 1 * CONSTANTS.SQUARE_SIZE + CONSTANTS.RADIUS * 2,
+      CONSTANTS.PADDING + 2 * CONSTANTS.SQUARE_SIZE + CONSTANTS.RADIUS * 2
+      )
     this.ctx.restore();
   }
 
@@ -416,17 +444,18 @@ class Renderer {
     this.ctx.restore();
   }
 
-  drawPiece(pos) {
+  drawPiece(pos,color,scale = 1,force=false) {
     const pieceValue = pos.value || this.game.board.getPieceValue(pos);
-    if (!this.game.board.isPiece(pieceValue)) return;
+    color = color || CONSTANTS.COLORS[this.game.board.getPlayer(pieceValue)];
+    if (!this.game.board.isPiece(pieceValue) && !force) return;
     this.ctx.save();
 
-    this.ctx.fillStyle = CONSTANTS.COLORS[this.game.board.getPlayer(pieceValue)];
+    this.ctx.fillStyle = color
     this.ctx.beginPath();
     this.ctx.arc(
       CONSTANTS.PADDING + pos.col * CONSTANTS.SQUARE_SIZE,
       CONSTANTS.PADDING + pos.row * CONSTANTS.SQUARE_SIZE,
-      CONSTANTS.RADIUS,
+      CONSTANTS.RADIUS * scale,
       0,
       2 * Math.PI,
       undefined
@@ -484,7 +513,7 @@ class Renderer {
       const [col,row] = key.split(',');
       this.ctx.strokeStyle = CONSTANTS.VALIDMOVECOLOR;
       this.ctx.beginPath();
-      this.ctx.arc(CONSTANTS.PADDING + row * CONSTANTS.SQUARE_SIZE,CONSTANTS.PADDING + col*CONSTANTS.SQUARE_SIZE,CONSTANTS.RADIUS,0,2 * Math.PI,undefined);
+      this.ctx.arc(CONSTANTS.PADDING + row * CONSTANTS.SQUARE_SIZE,CONSTANTS.PADDING + col*CONSTANTS.SQUARE_SIZE,CONSTANTS.RADIUS * 1.2,0,2 * Math.PI,undefined);
       this.ctx.closePath()
       this.ctx.stroke();
     } 

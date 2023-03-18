@@ -56,7 +56,7 @@ function getAllMoves(board,player,startTime) {
 
 addEventListener('message',e=>{
   if( e.data.player && e.data.board ){
-    const [eval,move] = minimax({board:e.data.board},2*3,true,-CONSTANTS.INFINITY,+CONSTANTS.INFINITY,e.data.player)
+    const [eval,move] = minimax({board:e.data.board},2*(e.data.level||1),true,-CONSTANTS.INFINITY,+CONSTANTS.INFINITY,e.data.player)
     postMessage({id:e.data.id, move,player:e.data.player});
   }
 },false);
