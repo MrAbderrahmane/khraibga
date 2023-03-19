@@ -54,15 +54,8 @@ class Renderer {
     this.game = new Game();
     this.worker = new Worker('js/minimax.js');
     this.worker.onmessage = e =>{
-      // if(game.cancledAiPlayId === e.data.id){
-      //   game.cancledAiPlayId = 0;
-      //   return;
-      // }
-      // if(!game.paused){
       this.game.makeAIMove(e.data);
       this.waitingForAiMove = false;
-      // }
-      // this.game aiIsPlaying = false;
     }
     this.currentFrame = 0;
 
@@ -105,23 +98,12 @@ class Renderer {
   stop(){
     cancelAnimationFrame(this.requestAnimationFrameRef);
   }
-  // let lastTimeStamp = 0;
+
   animate(time) {
     if(time - this.lastTimeStamp > 60){
       this.draw();
-      // if(renderer.paused && pauseBtn.textContent !== 'continue'){
-      //   pauseBtn.textContent = 'continue';
-      // }else if(!renderer.paused && pauseBtn.textContent !== 'pause'){
-      //   pauseBtn.textContent = 'pause';
-      // }
       this.lastTimeStamp =  time;
       this.requestAnimationFrameRef = requestAnimationFrame(this.animate.bind(this))
-      // if(renderer.aiPlayers[renderer.turn] && !aiIsPlaying && !renderer.paused){
-      //   aiIsPlaying = true;
-      //   setTimeout(() => {
-      //     aiPlay(renderer.turn,renderer.board.board);
-      //   }, 100);
-      // }
     }else{
       this.requestAnimationFrameRef = requestAnimationFrame(this.animate.bind(this))
     }
@@ -175,10 +157,8 @@ class Renderer {
     if(winner){
       this.drawWinner(winner);
     }else if(this.game.lastMove?.shouldBeAnimated){
-      // this.drawCapturedPieces(counts);
       this.drawFrame();
     } else {
-      // this.drawCapturedPieces(counts);
       this.drawBoardAndPieces();
       this._highlightSelected();
       this._highlightMovablePieces();
@@ -187,26 +167,6 @@ class Renderer {
         this.getAiPlaying()
       }
     }
-  }
-
-  drawCapturedPieces(counts){
-    const capturedFromFirstPlayer = 12 - counts.firstPlayerAllPiecesCount;
-    const capturedFromSecondPlayer = 12 - counts.secondPlayerAllPiecesCount;
-    this.drawPiece({ row:-0.35, col:1.5,value:1 });
-    this.drawPiece({ row:4.35, col:1.5,value:-1 });
-
-    this.ctx.save();
-    this.ctx.fillText(
-      capturedFromFirstPlayer,
-      CONSTANTS.WIDTH / 2 + 20,
-      21
-    );
-    this.ctx.fillText(
-      capturedFromSecondPlayer,
-      CONSTANTS.WIDTH / 2 + 20,
-      CONSTANTS.WIDTH + CONSTANTS.PADDING * 2 - 8
-    )
-    this.ctx.restore();
   }
 
   drawFrame(){
@@ -259,74 +219,19 @@ class Renderer {
   }
 
   drawCollectedPiece(pos,progress,grow=false){
-    this.ctx.save();
-
-    this.ctx.fillStyle = CONSTANTS.COLORS[this.game.board.getPlayer(pos.value)];
-    this.ctx.beginPath();
-    this.ctx.arc(
-      CONSTANTS.PADDING + pos.col * CONSTANTS.SQUARE_SIZE,
-      CONSTANTS.PADDING + pos.row * CONSTANTS.SQUARE_SIZE,
-      CONSTANTS.RADIUS * (grow?progress:(1-progress)),
-      0,
-      2 * Math.PI,
-      undefined
-    );
-    this.ctx.closePath();
-    this.ctx.fill();
-    this.ctx.stroke();
-
-    if (Math.abs(pos.value) === 1.1) {
-      this.ctx.beginPath();
-      this.ctx.arc(
-        CONSTANTS.PADDING + pos.col * CONSTANTS.SQUARE_SIZE,
-        CONSTANTS.PADDING + pos.row * CONSTANTS.SQUARE_SIZE,
-        (CONSTANTS.RADIUS - 5)  * (grow?progress:(1-progress)),
-        0,
-        2 * Math.PI,
-        undefined
-      );
-      this.ctx.closePath();
-      this.ctx.fill();
-      this.ctx.stroke();
-    }
-
-    this.ctx.restore();
+    const color = CONSTANTS.COLORS[this.game.board.getPlayer(pos.value)];
+    const scale = grow?progress:(1-progress);
+    this.drawPiece(pos,color,scale,true);
   }
 
   drawAnimatedPiece(from,to,value,progress) {
-
-    this.ctx.save();
-
-    this.ctx.fillStyle = CONSTANTS.COLORS[this.game.board.getPlayer(value)];
-    this.ctx.beginPath();
-    this.ctx.arc(
-      CONSTANTS.PADDING + (from.col + (to.col - from.col) *progress) * CONSTANTS.SQUARE_SIZE,
-      CONSTANTS.PADDING + (from.row + (to.row - from.row) * progress) * CONSTANTS.SQUARE_SIZE,
-      CONSTANTS.RADIUS,
-      0,
-      2 * Math.PI,
-      undefined
-    );
-    this.ctx.closePath();
-    this.ctx.fill();
-    this.ctx.stroke();
-
-    if (Math.abs(value) === 1.1) {
-      this.ctx.beginPath();
-      this.ctx.arc(
-        CONSTANTS.PADDING + (from.col + (to.col - from.col)*progress) * CONSTANTS.SQUARE_SIZE,
-        CONSTANTS.PADDING + (from.row + (to.row - from.row)*progress) * CONSTANTS.SQUARE_SIZE,
-        CONSTANTS.RADIUS - 5,
-        0,
-        2 * Math.PI,
-        undefined
-      );
-      this.ctx.closePath();
-      this.ctx.fill();
-      this.ctx.stroke();
+    const color = CONSTANTS.COLORS[this.game.board.getPlayer(value)];
+    const calcPos = {
+      row: from.row + (to.row - from.row) * progress,
+      col: from.col + (to.col - from.col) *progress,
+      value
     }
-
-    this.ctx.restore();
+    this.drawPiece(calcPos,color,1,true);
   }
 
   getAiPlaying(){
@@ -445,9 +350,9 @@ class Renderer {
   }
 
   drawPiece(pos,color,scale = 1,force=false) {
-    const pieceValue = pos.value || this.game.board.getPieceValue(pos);
+    const pieceValue = pos.value || (force? undefined : this.game.board.getPieceValue(pos));
     color = color || CONSTANTS.COLORS[this.game.board.getPlayer(pieceValue)];
-    if (!this.game.board.isPiece(pieceValue) && !force) return;
+    if (!force && !this.game.board.isPiece(pieceValue)) return;
     this.ctx.save();
 
     this.ctx.fillStyle = color
@@ -469,7 +374,7 @@ class Renderer {
       this.ctx.arc(
         CONSTANTS.PADDING + pos.col * CONSTANTS.SQUARE_SIZE,
         CONSTANTS.PADDING + pos.row * CONSTANTS.SQUARE_SIZE,
-        CONSTANTS.RADIUS - 5,
+        (CONSTANTS.RADIUS - 5) * scale,
         0,
         2 * Math.PI,
         undefined

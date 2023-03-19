@@ -507,8 +507,7 @@ class Board {
     }
   }
 
-  getValidJumps(pos,startTime, validJumps = [], lastMove = null) {
-    if(startTime && Date.now() - startTime >= CONSTANTS.AITIMELIMIT) return validJumps;
+  getValidJumps(pos, validJumps = [], lastMove = null) {
     let len = CONSTANTS.ALLNEIBOURS.length;
     const board = lastMove && lastMove.board ? lastMove.board : this.board;
     while (len--) {
@@ -529,7 +528,7 @@ class Board {
           );
         if (move) {
           this.addMoveToBestMoves(validJumps, move);
-          this.getValidJumps(move.to,startTime, validJumps, move);
+          this.getValidJumps(move.to, validJumps, move);
           const allMoves = this.getMovesInRow(
             move,
             move.board,
@@ -541,9 +540,8 @@ class Board {
             const m = allMoves[j];
             if (m) {
               this.addMoveToBestMoves(validJumps, m);
-              this.getValidJumps(m.to,startTime, validJumps, m);
+              this.getValidJumps(m.to, validJumps, m);
             }
-            if(startTime && Date.now() - startTime >= CONSTANTS.AITIMELIMIT) break;
           }
         }
       } else {
@@ -555,29 +553,18 @@ class Board {
         );
         if (move) {
           this.addMoveToBestMoves(validJumps, move);
-          this.getValidJumps(move.to,startTime, validJumps, move);
+          this.getValidJumps(move.to, validJumps, move);
         }
       }
-      if(startTime && Date.now() - startTime >= CONSTANTS.AITIMELIMIT) break;
     }
     return validJumps;
   }
 
-  getValidMoves(pos,startTime) {
+  getValidMoves(pos) {
     if (!this.isPiece(this.getPieceValue(pos)))
       return { maxJump: 0, validMoves: [] };
-    /* !  caching
-    if (
-      Board[
-        pos.row.toString() + "-" + pos.col.toString() + this.board.toString()
-      ]
-    )
-      return Board[
-        pos.row.toString() + "-" + pos.col.toString() + this.board.toString()
-      ];
-    */
     
-    const possibleJumps = this.getValidJumps(pos,startTime);
+    const possibleJumps = this.getValidJumps(pos);
     this.makeKingsByMoves(possibleJumps);
     if (possibleJumps.length) {
       return {
@@ -591,28 +578,20 @@ class Board {
       maxJump: 0,
       validMoves: simpleMoves
     };
-    /* ! caching
-    Board[
-      pos.row.toString() + "-" + pos.col.toString() + this.board.toString()
-    ] = res;
-    */
     return res;
   }
 
-  getMovablePiecesAndTheirValidMoves(player,startTime) {
+  getMovablePiecesAndTheirValidMoves(player) {
     const allMovablePiecesMoves = new Map();
     const allPieces = this.getAllPieces(player);
     let bestJumpingCount = 0;
     let i = allPieces.length;
     while (i--) {
       const piece = allPieces[i];
-      const { maxJump, validMoves: moves } = this.getValidMoves(piece,startTime);
+      const { maxJump, validMoves: moves } = this.getValidMoves(piece);
       if (moves.length) {
         bestJumpingCount = Math.max(bestJumpingCount, maxJump);
         allMovablePiecesMoves.set(`${piece.row},${piece.col}`, moves);
-      }
-      if(startTime && Date.now() - startTime >= CONSTANTS.AITIMELIMIT){
-        break;
       }
     }
     if (bestJumpingCount === 0) return allMovablePiecesMoves;

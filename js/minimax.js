@@ -44,9 +44,9 @@ function minimax(move,depth,maxPlayer,alpha,beta,player) {
   }
 }
 
-function getAllMoves(board,player,startTime) {
+function getAllMoves(board,player) {
   let allMoves = []
-  const pieces = board.getMovablePiecesAndTheirValidMoves(player,startTime);
+  const pieces = board.getMovablePiecesAndTheirValidMoves(player);
   for (const moves of pieces.values()) {
     allMoves.push(...moves);
   }
