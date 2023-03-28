@@ -266,29 +266,29 @@ class Renderer {
   _drawBoard() {
     this.ctx.save();
     // draw horizantal lines
-    for (let i = 0; i < CONSTANTS.ITER + 1; i++) {
+    for (let i = 0; i < CONSTANTS.ITER * 2 + 1; i++) {
       this.ctx.beginPath();
       this.ctx.moveTo(
-        CONSTANTS.PADDING + i * CONSTANTS.CELLWIDTH,
+        CONSTANTS.PADDING + i * CONSTANTS.CELLWIDTH / 2,
         CONSTANTS.PADDING
       );
       this.ctx.lineTo(
-        CONSTANTS.PADDING + i * CONSTANTS.CELLWIDTH,
+        CONSTANTS.PADDING + i * CONSTANTS.CELLWIDTH / 2,
         CONSTANTS.PADDING + CONSTANTS.HEIGHT
       );
       this.ctx.closePath();
       this.ctx.stroke();
     }
     // draw vertical lines
-    for (let i = 0; i < CONSTANTS.ITER + 1; i++) {
+    for (let i = 0; i < CONSTANTS.ITER * 2 + 1; i++) {
       this.ctx.beginPath();
       this.ctx.moveTo(
         CONSTANTS.PADDING,
-        CONSTANTS.PADDING + i * CONSTANTS.CELLWIDTH
+        CONSTANTS.PADDING + i * CONSTANTS.CELLWIDTH / 2
       );
       this.ctx.lineTo(
         CONSTANTS.PADDING + CONSTANTS.WIDTH,
-        CONSTANTS.PADDING + i * CONSTANTS.CELLWIDTH
+        CONSTANTS.PADDING + i * CONSTANTS.CELLWIDTH / 2
       );
       this.ctx.closePath();
       this.ctx.stroke();
