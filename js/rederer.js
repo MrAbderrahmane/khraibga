@@ -19,8 +19,8 @@ class Renderer {
   </form>`;
     diag.addEventListener('close', () => {
       this.level = +diag.querySelector('input').value
-      this.setAIUser(!!diag.returnValue)
       this.newGame();
+      this.setAIUser(!!diag.returnValue)
     })
     root.appendChild(diag);
     // new game btn
